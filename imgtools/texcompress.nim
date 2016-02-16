@@ -4,8 +4,9 @@ var texTool: string
 
 proc texToolPath(): string =
     if texTool.isNil:
-        let (imgtoolsPath, err) = execCmdEx("nimble path imgtools")
+        var (imgtoolsPath, err) = execCmdEx("nimble path imgtools")
         doAssert(err == 0, "imgtools is not installed in nimble packages")
+        imgtoolsPath = imgtoolsPath.strip()
         const osname = when defined(macosx):
                 "OSX_x86"
             elif defined(windows):
