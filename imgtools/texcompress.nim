@@ -2,11 +2,17 @@ import osproc, os, strutils
 
 var texTool: string
 
+proc nimblePath(package: string): string =
+    var (nimbleNimxDir, err) = execCmdEx("nimble path " & package)
+    if err == 0:
+        let lines = nimbleNimxDir.splitLines()
+        if lines.len > 1:
+            result = lines[^2]
+
 proc texToolPath(): string =
     if texTool.isNil:
-        var (imgtoolsPath, err) = execCmdEx("nimble path imgtools")
-        doAssert(err == 0, "imgtools is not installed in nimble packages")
-        imgtoolsPath = imgtoolsPath.strip()
+        let imgtoolsPath = nimblePath("imgtools")
+        doAssert(not imgtoolsPath.isNil, "imgtools is not installed in nimble packages")
         const osname = when defined(macosx):
                 "OSX_x86"
             elif defined(windows):
