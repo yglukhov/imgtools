@@ -38,8 +38,13 @@ proc texToolPath(): string =
         texTool = imgtoolsPath / "pvrtextool" / "CLI" / osname / "PVRTexToolCLI"
     result = texTool
 
-proc convertToETC2*(fromPath, toPath: string) =
-    var args = [texToolPath(), "-i", fromPath, "-o", toPath, "-f", "ETC2_RGBA", "-q", "etcfast"]
+proc convertToETC2*(fromPath, toPath: string, highQuality: bool = false) =
+    var args = @[texToolPath(), "-i", fromPath, "-o", toPath, "-f", "ETC2_RGBA"]
+    if highQuality:
+        args.add(["-q", "etcslowperceptual"])
+    else:
+        args.add(["-q", "etcfastperceptual"])
+
     let errC = execCmd(args.join(" "))
     if errC != 0:
         raise newException(Exception, "PVRImgtool exited with code " & $errC)
