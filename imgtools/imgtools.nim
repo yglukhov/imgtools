@@ -1,4 +1,5 @@
 import stb_image_resize
+import nimPNG
 
 type Rect* = tuple[x, y, width, height: int]
 
@@ -28,7 +29,7 @@ proc blitImage*(toData: var string, toWidth, toHeight, toX, toY: int, fromData: 
             for c in 0 ..< comp:
                 toData[toOff + c] = fromData[fromOff + c]
 
-proc imageBounds*(data: string, width, height: int): Rect =
+proc imageBoundsNoColorBleed*(data: string, width, height: int): Rect =
     var minX = width
     var minY = height
     var maxX = 0
@@ -45,7 +46,7 @@ proc imageBounds*(data: string, width, height: int): Rect =
 
     result = (minX, minY, maxX - minX, maxY - minY)
 
-proc boundsWithBlitImage*(data: string, width, height: int): Rect =
+proc imageBounds*(data: string, width, height: int): Rect =
     var minX = width
     var minY = height
     var maxX = 0
@@ -59,12 +60,19 @@ proc boundsWithBlitImage*(data: string, width, height: int): Rect =
                 if x < minX: minX = x
                 if y > maxY: maxY = y
                 if y < minY: minY = y
-            else:
-                data[i]   = data[off + 3]
-                data[i+1] = data[off + 3]
-                data[i+2] = data[off + 3]
 
     result = (minX, minY, maxX - minX, maxY - minY)
+
+proc zeroColorIfZeroAlpha*(data: var string) =
+    let dataLen = data.len()
+    let step = 4
+    var i = step - 1
+    while i < dataLen:
+        if data[i].uint8 == 0:
+            data[i-1] = 0.char
+            data[i-2] = 0.char
+            data[i-3] = 0.char
+        i += step
 
 when isMainModule:
     import nimPNG
