@@ -28,7 +28,7 @@ proc blitImage*(toData: var string, toWidth, toHeight, toX, toY: int, fromData: 
             for c in 0 ..< comp:
                 toData[toOff + c] = fromData[fromOff + c]
 
-proc imageBounds*(data: string, width, height: int): Rect =
+proc imageBoundsNoColorBleed*(data: string, width, height: int): Rect =
     var minX = width
     var minY = height
     var maxX = 0
@@ -44,6 +44,34 @@ proc imageBounds*(data: string, width, height: int): Rect =
                 if y < minY: minY = y
 
     result = (minX, minY, maxX - minX, maxY - minY)
+
+proc imageBounds*(data: string, width, height: int): Rect =
+    var minX = width
+    var minY = height
+    var maxX = 0
+    var maxY = 0
+
+    for x in 0 ..< width:
+        for y in 0 ..< height:
+            let off = (y * width + x) * 4
+            if data[off + 3].uint8 != 0:
+                if x > maxX: maxX = x
+                if x < minX: minX = x
+                if y > maxY: maxY = y
+                if y < minY: minY = y
+
+    result = (minX, minY, maxX - minX, maxY - minY)
+
+proc zeroColorIfZeroAlpha*(data: var string) =
+    let dataLen = data.len()
+    let step = 4
+    var i = step - 1
+    while i < dataLen:
+        if data[i].uint8 == 0:
+            data[i-1] = 0.char
+            data[i-2] = 0.char
+            data[i-3] = 0.char
+        i += step
 
 when isMainModule:
     import nimPNG
