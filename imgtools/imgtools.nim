@@ -1,5 +1,4 @@
 import stb_image_resize
-import nimPNG
 
 type Rect* = tuple[x, y, width, height: int]
 
