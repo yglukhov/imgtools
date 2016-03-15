@@ -45,6 +45,27 @@ proc imageBounds*(data: string, width, height: int): Rect =
 
     result = (minX, minY, maxX - minX, maxY - minY)
 
+proc boundsWithBlitImage*(data: string, width, height: int): Rect =
+    var minX = width
+    var minY = height
+    var maxX = 0
+    var maxY = 0
+
+    for x in 0 ..< width:
+        for y in 0 ..< height:
+            let off = (y * width + x) * 4
+            if data[off + 3].uint8 != 0:
+                if x > maxX: maxX = x
+                if x < minX: minX = x
+                if y > maxY: maxY = y
+                if y < minY: minY = y
+            else:
+                data[i]   = data[off + 3]
+                data[i+1] = data[off + 3]
+                data[i+2] = data[off + 3]
+
+    result = (minX, minY, maxX - minX, maxY - minY)
+
 when isMainModule:
     import nimPNG
     var png = loadPNG32("/Users/yglukhov/Projects/falcon/res/eiffel_slot/Chef/Chef31.png")
