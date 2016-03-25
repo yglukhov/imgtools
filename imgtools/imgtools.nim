@@ -43,7 +43,7 @@ proc imageBoundsNoColorBleed*(data: string, width, height: int): Rect =
                 if y > maxY: maxY = y
                 if y < minY: minY = y
 
-    result = (minX, minY, maxX - minX, maxY - minY)
+    result = (minX, minY, maxX - minX + 1, maxY - minY + 1)
 
 proc imageBounds*(data: string, width, height: int): Rect =
     var minX = width
@@ -60,7 +60,7 @@ proc imageBounds*(data: string, width, height: int): Rect =
                 if y > maxY: maxY = y
                 if y < minY: minY = y
 
-    result = (minX, minY, maxX - minX, maxY - minY)
+    result = (minX, minY, maxX - minX + 1, maxY - minY + 1)
 
 proc zeroColorIfZeroAlpha*(data: var string) =
     let dataLen = data.len()
