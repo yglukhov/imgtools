@@ -62,6 +62,73 @@ proc imageBounds*(data: string, width, height: int): Rect =
 
     result = (minX, minY, maxX - minX + 1, maxY - minY + 1)
 
+proc extrudeBorderPixels*(data: var string, dw, dh, x, y, w, h, extrusion: int) =
+    const pixelComponents = 4
+
+    # Top Border
+    for row in y ..< y + extrusion:
+        for col in x + extrusion ..< x + w - extrusion:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = ((y + extrusion) * dw + col) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Right Border
+    for row in y + extrusion ..< y + h - extrusion:
+        for col in x + w - extrusion ..< x + w:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = (row * dw + x + w - extrusion - 1) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Bottom Border
+    for row in y + h - extrusion ..< y + h:
+        for col in x + extrusion ..< x + w - extrusion:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = ((y + h - extrusion - 1) * dw + col) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Left Border
+    for row in y + extrusion ..< y + h - extrusion:
+        for col in x ..< x + extrusion:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = (row * dw + x + extrusion) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Top-Left Corner
+    for row in y ..< y + extrusion:
+        for col in x ..< x + extrusion:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = ((y + extrusion) * dw + x + extrusion) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Top-Right Corner
+    for row in y ..< y + extrusion:
+        for col in x + w - extrusion ..< x + w:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = ((y + extrusion) * dw + x + w - extrusion - 1) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Bottom-Right Corner
+    for row in y + h - extrusion ..< y + h:
+        for col in x + w - extrusion ..< x + w:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = ((y + h - extrusion - 1) * dw + x + w - extrusion - 1) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
+    # Bottom-Left Corner
+    for row in y + h - extrusion ..< y + h:
+        for col in x ..< x + extrusion:
+            let
+                pixpos = (row * dw + col) * pixelComponents
+                srcpos = ((y + h - extrusion - 1) * dw + x + extrusion) * pixelComponents
+            for i in 0 .. 3: data[pixpos + i] = data[srcpos + i]
+
 proc zeroColorIfZeroAlpha*(data: var string) =
     let dataLen = data.len()
     let step = 4
