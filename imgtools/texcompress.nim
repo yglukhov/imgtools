@@ -3,7 +3,10 @@ import osproc, os, strutils
 var texTool: string
 
 proc nimblePath(package: string): string =
-    var (nimbleNimxDir, err) = execCmdEx("nimble path " & package)
+    var nimblecmd = "nimble"
+    when defined(windows):
+        nimblecmd &= ".cmd"
+    var (nimbleNimxDir, err) = execCmdEx( nimblecmd & " path " & package)
     if err == 0:
         let lines = nimbleNimxDir.splitLines()
         if lines.len > 1:
