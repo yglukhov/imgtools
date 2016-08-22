@@ -59,11 +59,11 @@ proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) 
             let x = j mod width;
             let y = j div width;
 
-            var r = 0.0;
-            var g = 0.0;
-            var b = 0.0;
+            var r = 0'u8;
+            var g = 0'u8;
+            var b = 0'u8;
 
-            var count = 0;
+            var count = 0'u8;
 
             for k in 0 ..< 8:
                 let s = offsets[k][0];
@@ -74,15 +74,15 @@ proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) 
 
                     if ((opaque[j + s + t] and 1) > 0):
                         let index = i + 4 * (s + t);
-                        r += cast[uint8](image[index + 0]).float
-                        g += cast[uint8](image[index + 1]).float
-                        b += cast[uint8](image[index + 2]).float
+                        r += cast[uint8](image[index + 0])
+                        g += cast[uint8](image[index + 1])
+                        b += cast[uint8](image[index + 2])
                         inc count
 
             if (count != 0):
-                image[i + 0] = cast[char]((r / count.float).int)
-                image[i + 1] = cast[char]((g / count.float).int)
-                image[i + 2] = cast[char]((b / count.float).int)
+                image[i + 0] = cast[char](r div count)
+                image[i + 1] = cast[char](g div count)
+                image[i + 2] = cast[char](b div count)
                 opaque[j] = cast[int8](0xFE)
 
                 for k in 0 ..< 8:
