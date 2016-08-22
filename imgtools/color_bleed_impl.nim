@@ -1,5 +1,5 @@
 
-proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) =
+proc colorBleed*(image: var string, width, height: int) =
     let N = width * height;
 
     var opaque = newSeq[int8](N)
@@ -49,9 +49,10 @@ proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) 
         j += 4
 
     var rad = 0
+    const targetRadius = 10
     while (pending.len > 0 and rad < targetRadius):
         pendingNext.setLen(0)
-
+        inc rad
         for p in 0 ..< pending.len:
             let i = pending[p] * 4;
             let j = pending[p];
@@ -59,11 +60,11 @@ proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) 
             let x = j mod width;
             let y = j div width;
 
-            var r = 0'u8;
-            var g = 0'u8;
-            var b = 0'u8;
+            var r = 0
+            var g = 0
+            var b = 0
 
-            var count = 0'u8;
+            var count = 0
 
             for k in 0 ..< 8:
                 let s = offsets[k][0];
@@ -74,9 +75,9 @@ proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) 
 
                     if ((opaque[j + s + t] and 1) > 0):
                         let index = i + 4 * (s + t);
-                        r += cast[uint8](image[index + 0])
-                        g += cast[uint8](image[index + 1])
-                        b += cast[uint8](image[index + 2])
+                        r += cast[uint8](image[index + 0]).int
+                        g += cast[uint8](image[index + 1]).int
+                        b += cast[uint8](image[index + 2]).int
                         inc count
 
             if (count != 0):
@@ -103,4 +104,4 @@ proc colorBleed*(image: var string, width, height: int, targetRadius: int = 10) 
                 opaque[pending[p]] = opaque[pending[p]] shr 1
 
         swap(pending, pendingNext)
-        inc rad
+
