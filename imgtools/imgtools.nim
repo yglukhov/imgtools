@@ -1,4 +1,5 @@
 import stb_image_resize
+import color_bleed_impl
 
 type Rect* = tuple[x, y, width, height: int]
 
@@ -139,6 +140,8 @@ proc zeroColorIfZeroAlpha*(data: var string) =
             data[i-2] = 0.char
             data[i-3] = 0.char
         i += step
+
+proc colorBleed*(image: pointer, width, height: cint) {.importc: "img_tools_nim_colorBleed".}
 
 when isMainModule:
     import nimPNG
