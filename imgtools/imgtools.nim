@@ -141,7 +141,7 @@ proc zeroColorIfZeroAlpha*(data: var string) =
             data[i-3] = 0.char
         i += step
 
-proc colorBleed*(image: pointer, width, height: cint) {.importc: "img_tools_nim_colorBleed".}
+proc colorBleed*(image: pointer, width, height: cint) {.importc: "img_tools_nim_colorBleed", noconv.}
 
 when isMainModule:
     import nimPNG
