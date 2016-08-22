@@ -1,149 +1,107 @@
 
-proc dummyWithNoParticularMeaning() {.importcpp.}
+proc colorBleed*(image: var string, width, height: int) =
+    let N = width * height;
 
+    var opaque = newSeq[uint8](N)
+    var loose = newSeq[bool](N)
 
-{.emit: """
-#include <vector>
+    var pending = newSeqOfCap[int](N)
+    var pendingNext = newSeqOfCap[int](N)
 
-extern "C" void img_tools_nim_colorBleed(char* image, int width, int height)
-{
-    const size_t N = width * height;
+    const offsets = [
+        [-1, -1],
+        [ 0, -1],
+        [ 1, -1],
+        [-1,  0],
+        [ 1,  0],
+        [-1,  1],
+        [ 0,  1],
+        [ 1,  1]
+    ]
 
-    std::vector<char> opaque(N);
-    std::vector<bool>   loose(N);
+    var i = 0
+    var j = 3
+    while i < N:
+        if ord(image[j]) == 0:
+            var isLoose = true;
 
-    std::vector<size_t> pending;
-    std::vector<size_t> pendingNext;
+            var x = i mod width
+            var y = i div width
 
-    pending.reserve(N);
-    pendingNext.reserve(N);
+            for k in 0 ..< 8:
+                let s = offsets[k][0]
+                let t = offsets[k][1]
 
-    int offsets[][2] = {
-        {-1, -1},
-        { 0, -1},
-        { 1, -1},
-        {-1,  0},
-        { 1,  0},
-        {-1,  1},
-        { 0,  1},
-        { 1,  1}
-    };
+                if (x + s >= 0 and x + s < width and y + t >= 0 and y + t < height):
+                    let index = j + 4 * (s + t * width);
 
-    for (size_t i = 0, j = 3; i < N; i++, j += 4)
-    {
-        if (image[j] == 0)
-        {
-            bool isLoose = true;
-
-            int x = i % width;
-            int y = i / width;
-
-            for (int k = 0; k < 8; k++)
-            {
-                int s = offsets[k][0];
-                int t = offsets[k][1];
-
-                if (x + s >= 0 && x + s < width && y + t >= 0 && y + t < height)
-                {
-                    size_t index = j + 4 * (s + t * width);
-
-                    if (image[index + 3] != 0)
-                    {
+                    if (ord(image[index + 3]) != 0):
                         isLoose = false;
                         break;
-                    }
-                }
-            }
 
-            if (!isLoose)
-                pending.push_back(i);
-            else
+            if (not isLoose):
+                pending.add(i);
+            else:
                 loose[i] = true;
-        }
-        else
-        {
-            opaque[i] = -1;
-        }
-    }
+        else:
+            opaque[i] = 0xFF;
+        inc i
+        j += 4
 
-    while (pending.size() > 0)
-    {
-        pendingNext.clear();
+    while (pending.len > 0):
+        pendingNext.setLen(0)
 
-        for (size_t p = 0; p < pending.size(); p++)
-        {
-            size_t i = pending[p] * 4;
-            size_t j = pending[p];
+        for p in 0 ..< pending.len:
+            let i = pending[p] * 4;
+            let j = pending[p];
 
-            int x = j % width;
-            int y = j / width;
+            let x = j mod width;
+            let y = j div width;
 
-            int r = 0;
-            int g = 0;
-            int b = 0;
+            var r = 0;
+            var g = 0;
+            var b = 0;
 
-            int count = 0;
+            var count = 0;
 
-            for (size_t k = 0; k < 8; k++)
-            {
-                int s = offsets[k][0];
-                int t = offsets[k][1];
+            for k in 0 ..< 8:
+                let s = offsets[k][0];
+                var t = offsets[k][1];
 
-                if (x + s >= 0 && x + s < width && y + t >= 0 && y + t < height)
-                {
+                if x + s >= 0 and x + s < width and y + t >= 0 and y + t < height:
                     t *= width;
 
-                    if (opaque[j + s + t] & 1)
-                    {
-                        size_t index = i + 4 * (s + t);
+                    if ((opaque[j + s + t] and 1) != 0):
+                        let index = i + 4 * (s + t);
 
-                        r += image[index + 0];
-                        g += image[index + 1];
-                        b += image[index + 2];
+                        r += ord(image[index + 0])
+                        g += ord(image[index + 1])
+                        b += ord(image[index + 2])
 
-                        count++;
-                    }
-                }
-            }
+                        inc count
 
-            if (count > 0)
-            {
-                image[i + 0] = r / count;
-                image[i + 1] = g / count;
-                image[i + 2] = b / count;
+            if (count > 0):
+                image[i + 0] = char(r div count)
+                image[i + 1] = char(g div count)
+                image[i + 2] = char(b div count)
 
-                opaque[j] = 0xFE;
+                opaque[j] = 0xFE
 
-                for (size_t k = 0; k < 8; k++)
-                {
-                    int s = offsets[k][0];
-                    int t = offsets[k][1];
+                for k in 0 ..< 8:
+                    let s = offsets[k][0];
+                    let t = offsets[k][1];
 
-                    if (x + s >= 0 && x + s < width && y + t >= 0 && y + t < height)
-                    {
-                        size_t index = j + s + t * width;
+                    if (x + s >= 0 and x + s < width and y + t >= 0 and y + t < height):
+                        let index = j + s + t * width;
 
-                        if (loose[index])
-                        {
-                            pendingNext.push_back(index);
+                        if (loose[index]):
+                            pendingNext.add(index);
                             loose[index] = false;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                pendingNext.push_back(j);
-            }
-        }
+            else:
+                pendingNext.add(j);
 
-        if (pendingNext.size() > 0)
-        {
-            for (size_t p = 0; p < pending.size(); p++)
-                opaque[pending[p]] >>= 1;
-        }
+        if (pendingNext.len > 0):
+            for p in 0 ..< pending.len:
+                opaque[pending[p]] = opaque[pending[p]] shr 1
 
-        pending.swap(pendingNext);
-    }
-}
-""".}
+        swap(pending, pendingNext)
