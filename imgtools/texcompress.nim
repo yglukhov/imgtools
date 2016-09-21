@@ -10,8 +10,9 @@ proc nimblePath(package: string): string =
         if lines.len > 1:
             result = lines[^2]
 
+var texTool {.threadVar.}: string
+
 proc texToolPath(): string =
-    var texTool {.threadVar.}: string
     if texTool.isNil:
         let imgtoolsPath = nimblePath("imgtools")
         doAssert(not imgtoolsPath.isNil, "imgtools is not installed in nimble packages")
