@@ -1,7 +1,5 @@
 import osproc, os, strutils
 
-var texTool: string
-
 proc nimblePath(package: string): string =
     var nimblecmd = "nimble"
     when defined(windows):
@@ -13,6 +11,7 @@ proc nimblePath(package: string): string =
             result = lines[^2]
 
 proc texToolPath(): string =
+    var texTool {.threadVar.}: string
     if texTool.isNil:
         let imgtoolsPath = nimblePath("imgtools")
         doAssert(not imgtoolsPath.isNil, "imgtools is not installed in nimble packages")
