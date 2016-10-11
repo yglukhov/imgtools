@@ -62,6 +62,8 @@ proc imageBounds*(data: string, width, height: int): Rect =
                 if y < minY: minY = y
 
     result = (minX, minY, maxX - minX + 1, maxY - minY + 1)
+    if result.width < 0 or result.height < 0:
+        result = (0, 0, 1, 1)
 
 proc extrudeBorderPixels*(data: var string, dw, dh, x, y, w, h, extrusion: int) =
     const pixelComponents = 4
