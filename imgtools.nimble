@@ -8,4 +8,5 @@ license       = "MIT"
 # Dependencies
 
 requires "nim >= 0.13.0"
-
+requires "rect_packer"
+requires "nimPNG"
