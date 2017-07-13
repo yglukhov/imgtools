@@ -24,6 +24,7 @@ type
     ImageOccurence*[TInfo] = object
         path*: string
         allowAlphaCrop*: bool
+        disablePotAdjustment*: bool
         category*: string
         downsampleRatio*: float
         extrusion*: int
@@ -38,6 +39,7 @@ type
     SourceImage = object
         path: string
         allowAlphaCrop: bool
+        disablePotAdjustment: bool
         downsampleRatio: float
         extrusion: int
         spriteSheet: SpriteSheet
@@ -80,15 +82,30 @@ proc readImageInfo(path: string, allowAlphaCrop: bool): SourceImageInfo {.gcsafe
 proc readSourceInfo(sourceImages: var openarray[SourceImage]) =
     var imageBoundsResults = newSeq[FlowVar[SourceImageInfo]](sourceImages.len)
     for i in 0 ..< sourceImages.len:
-        #echo "Reading ", sourceImages[i].path
         imageBoundsResults[i] = spawn readImageInfo(sourceImages[i].path, sourceImages[i].allowAlphaCrop)
 
     for i in 0 ..< sourceImages.len:
         sourceImages[i].srcInfo = ^^imageBoundsResults[i]
 
+proc betterDimension(dimension, extrusion: int, downsampleRatio: float, disablePotAdjustment: bool): int =
+    let r = int(dimension.float / downsampleRatio)
+    if disablePotAdjustment:
+        return r
+    var changed = true
+    result = case r + extrusion * 2
+        of 257 .. 400: 256
+        of 513 .. 700: 512
+        of 1025 .. 1300: 1024
+        else:
+            changed = false
+            r
+    if result > 2048: result = 2048
+    if changed:
+        result -= extrusion * 2
+
 proc calculateTargetSize(si: var SourceImage) =
-    si.dstBounds.width = int(si.srcInfo.rect.width.float / si.downsampleRatio)
-    si.dstBounds.height = int(si.srcInfo.rect.height.float / si.downsampleRatio)
+    si.dstBounds.width = betterDimension(si.srcInfo.rect.width, si.extrusion, si.downsampleRatio, si.disablePotAdjustment)
+    si.dstBounds.height = betterDimension(si.srcInfo.rect.height, si.extrusion, si.downsampleRatio, si.disablePotAdjustment)
 
 proc tryPackImage(ss: SpriteSheet, im: var SourceImage): bool =
     let pos = ss.packer.packAndGrow(im.dstBounds.width.int32 + im.extrusion.int32 * 2, im.dstBounds.height.int32 + im.extrusion.int32 * 2)
@@ -148,7 +165,7 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
         #     zeroColorIfZeroAlpha(png.data)
         #     colorBleed(png.data, png.width, png.height)
 
-        if im.srcInfo.size.width != im.dstBounds.width or im.srcInfo.size.height != im.dstBounds.height:
+        if im.srcInfo.size.width == im.dstBounds.width and im.srcInfo.size.height == im.dstBounds.height:
             blitImage(
                 data, ss.size.width, ss.size.height, # Target image
                 im.dstBounds.x, im.dstBounds.y, # Position in target image
@@ -184,28 +201,25 @@ proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOcc
 
     var sourceImages = newSeq[SourceImage]()
     for k, v in images:
-        var allowAlphaCrop = true
-        var downsampleRatio: float
-        var extrusion = 0
+        var si: SourceImage
+        si.path = k
+        si.allowAlphaCrop = true
 
         for idx in v:
             if not occurences[idx].allowAlphaCrop:
-                allowAlphaCrop = false
+                si.allowAlphaCrop = false
 
             let dr = occurences[idx].downsampleRatio
-            if dr != 0 and dr > downsampleRatio:
-                downsampleRatio = dr
+            if dr != 0 and dr > si.downsampleRatio:
+                si.downsampleRatio = dr
 
-            if occurences[idx].extrusion > extrusion:
-                extrusion = occurences[idx].extrusion
+            if occurences[idx].extrusion > si.extrusion:
+                si.extrusion = occurences[idx].extrusion
 
-        if downsampleRatio < 1: downsampleRatio = 1
+            if occurences[idx].disablePotAdjustment:
+                si.disablePotAdjustment = true
 
-        var si: SourceImage
-        si.path = k
-        si.allowAlphaCrop = allowAlphaCrop
-        si.downsampleRatio = downsampleRatio
-        si.extrusion = extrusion
+        if si.downsampleRatio < 1: si.downsampleRatio = 1
         sourceImages.add(si)
 
     info "Packing category ", (if category.isNil: "nil" else: category), " with ", occurences.len, " images, ", sourceImages.len, " unique"
