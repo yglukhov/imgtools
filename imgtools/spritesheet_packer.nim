@@ -78,7 +78,6 @@ proc readImageInfo(path: string, allowAlphaCrop: bool): SourceImageInfo {.gcsafe
     else:
         result.rect.width = png.width
         result.rect.height = png.height
-    GC_fullCollect() # Workaround Nim bug
 
 proc readSourceInfo(sourceImages: var openarray[SourceImage]) =
     var imageBoundsResults = newSeq[FlowVar[SourceImageInfo]](sourceImages.len)
@@ -190,8 +189,6 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
         )
 
     discard savePNG32(ss.path, data, ss.size.width, ss.size.height)
-    data = nil
-    GC_fullCollect() # Workaround Nim bug
 
 proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence], category: string) =
     var images = initTable[string, seq[int]]()
