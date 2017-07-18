@@ -162,9 +162,9 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
     for im in images:
         let png = loadPNG32(im.path)
 
-        # if png.data.len == png.width * png.height * 4:
-        #     zeroColorIfZeroAlpha(png.data)
-        #     colorBleed(png.data, png.width, png.height)
+        if png.data.len == png.width * png.height * 4:
+            zeroColorIfZeroAlpha(png.data)
+            colorBleed(png.data, png.width, png.height)
 
         if im.srcInfo.size.width == im.dstBounds.width and im.srcInfo.size.height == im.dstBounds.height:
             blitImage(
