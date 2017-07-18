@@ -4,7 +4,7 @@ import rect_packer
 
 import imgtools
 
-const multithreaded = compileOption("threads")
+const multithreaded = false #compileOption("threads")
 
 when multithreaded:
     import threadpool
@@ -78,7 +78,6 @@ proc readImageInfo(path: string, allowAlphaCrop: bool): SourceImageInfo {.gcsafe
     else:
         result.rect.width = png.width
         result.rect.height = png.height
-    GC_fullCollect() # Workaround Nim bug
 
 proc readSourceInfo(sourceImages: var openarray[SourceImage]) =
     var imageBoundsResults = newSeq[FlowVar[SourceImageInfo]](sourceImages.len)
@@ -160,7 +159,7 @@ proc assignImagesToSpritesheets(imgs: var seq[SourceImage]): seq[SpriteSheet] =
 proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.} =
     var data = newString(ss.size.width * ss.size.height * 4)
     for im in images:
-        let png = loadPNG32(im.path)
+        var png = loadPNG32(im.path)
 
         if png.data.len == png.width * png.height * 4:
             zeroColorIfZeroAlpha(png.data)
@@ -178,6 +177,9 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
                 im.srcInfo.rect.x, im.srcInfo.rect.y, im.srcInfo.rect.width, im.srcInfo.rect.height,
                 im.dstBounds.x, im.dstBounds.y, im.dstBounds.width, im.dstBounds.height)
 
+        png = nil
+        GC_fullCollect() # Workaround Nim bug
+
         extrudeBorderPixels(
             data,
             ss.size.width,
@@ -192,6 +194,7 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
     discard savePNG32(ss.path, data, ss.size.width, ss.size.height)
     data = nil
     GC_fullCollect() # Workaround Nim bug
+    echo "GC_fullCollect: ", GC_getStatistics()
 
 proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence], category: string) =
     var images = initTable[string, seq[int]]()
