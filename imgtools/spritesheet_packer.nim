@@ -8,7 +8,6 @@ import threadpool_simple
 const multithreaded = compileOption("threads")
 
 when multithreaded:
-    import threadpool
     template `^^`[T](e: FlowVar[T]): untyped = ^e
 else:
     type FlowVar[T] = T
