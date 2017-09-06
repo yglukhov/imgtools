@@ -3,7 +3,7 @@ import nimPNG
 import rect_packer
 
 import imgtools
-import threadpool_simple
+include threadpool_simple # TODO: This should eventually end up in nim stdlib
 
 const multithreaded = compileOption("threads")
 
