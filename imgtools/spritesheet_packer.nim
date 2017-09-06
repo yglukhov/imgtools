@@ -3,11 +3,14 @@ import nimPNG
 import rect_packer
 
 import imgtools
-include threadpool_simple # TODO: This should eventually end up in nim stdlib
 
 const multithreaded = compileOption("threads")
+const useNewThreadpool = true
 
 when multithreaded:
+    when useNewThreadpool:
+        import threadpool_simple as ts # TODO: This should eventually end up in nim stdlib
+
     template `^^`[T](e: FlowVar[T]): untyped = ^e
 else:
     type FlowVar[T] = T
