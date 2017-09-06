@@ -3,8 +3,9 @@ import nimPNG
 import rect_packer
 
 import imgtools
+import threadpool_simple
 
-const multithreaded = false #compileOption("threads")
+const multithreaded = compileOption("threads")
 
 when multithreaded:
     import threadpool
@@ -178,7 +179,6 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
                 im.dstBounds.x, im.dstBounds.y, im.dstBounds.width, im.dstBounds.height)
 
         png = nil
-        GC_fullCollect() # Workaround Nim bug
 
         extrudeBorderPixels(
             data,
@@ -193,8 +193,6 @@ proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.}
 
     discard savePNG32(ss.path, data, ss.size.width, ss.size.height)
     data = nil
-    GC_fullCollect() # Workaround Nim bug
-    echo "GC_fullCollect: ", GC_getStatistics()
 
 proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence], category: string) =
     var images = initTable[string, seq[int]]()
