@@ -159,7 +159,7 @@ proc assignImagesToSpritesheets(imgs: var seq[SourceImage]): seq[SpriteSheet] =
     else:
         result = try2
 
-proc composeAndWrite(ss: SpriteSheet, images: openarray[SourceImage]) {.gcsafe.} =
+proc composeAndWrite(ss: SpriteSheet, images: seq[SourceImage]) {.gcsafe.} = # seq is better than openarray for spawn
     var data = newString(ss.size.width * ss.size.height * 4)
     for im in images:
         var png = loadPNG32(im.path)
