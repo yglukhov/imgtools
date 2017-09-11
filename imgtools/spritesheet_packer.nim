@@ -90,6 +90,8 @@ proc readSourceInfo(sourceImages: var openarray[SourceImage]) =
     for i in 0 ..< sourceImages.len:
         sourceImages[i].srcInfo = ^^imageBoundsResults[i]
 
+    sync()
+
 proc betterDimension(dimension, extrusion: int, downsampleRatio: float, disablePotAdjustment: bool): int =
     let r = int(dimension.float / downsampleRatio)
     if disablePotAdjustment:
