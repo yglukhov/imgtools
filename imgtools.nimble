@@ -9,5 +9,5 @@ license       = "MIT"
 
 requires "nim >= 0.13.0"
 requires "rect_packer"
-requires "nimPNG"
+requires "https://github.com/yglukhov/nimPNG"
 requires "https://github.com/yglukhov/threadpools"
