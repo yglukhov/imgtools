@@ -13,9 +13,9 @@ proc nimblePath(package: string): string =
 var texTool {.threadVar.}: string
 
 proc texToolPath(): string =
-    if texTool.isNil:
+    if texTool.len == 0:
         let imgtoolsPath = nimblePath("imgtools")
-        doAssert(not imgtoolsPath.isNil, "imgtools is not installed in nimble packages")
+        doAssert(imgtoolsPath.len != 0, "imgtools is not installed in nimble packages")
         const osname = when defined(macosx):
                 "OSX_x86"
             elif defined(windows):
@@ -35,7 +35,7 @@ proc texToolPath(): string =
             else:
                 nil
 
-        when osname.isNil:
+        when osname.len == 0:
             {.error: "Unsupported platform".}
 
         texTool = imgtoolsPath / "pvrtextool" / "CLI" / osname / "PVRTexToolCLI"

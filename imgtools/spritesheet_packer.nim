@@ -196,7 +196,7 @@ proc composeAndWrite(ss: SpriteSheet, images: seq[SourceImage]) {.gcsafe.} = # s
         )
 
     discard savePNG32(ss.path, data, ss.size.width, ss.size.height)
-    data = nil
+    data = ""
 
 proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence], category: string) =
     var images = initTable[string, seq[int]]()
@@ -230,7 +230,7 @@ proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOcc
         if si.downsampleRatio < 1: si.downsampleRatio = 1
         sourceImages.add(si)
 
-    info "Packing category ", (if category.isNil: "nil" else: category), " with ", occurences.len, " images, ", sourceImages.len, " unique"
+    info "Packing category ", (if category.len == 0: "nil" else: category), " with ", occurences.len, " images, ", sourceImages.len, " unique"
 
     var s = epochTime()
     readSourceInfo(sourceImages)
