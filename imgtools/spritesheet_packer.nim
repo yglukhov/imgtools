@@ -38,7 +38,7 @@ type
         info*: TInfo
 
     Size* = tuple[width, height: int]
-    
+
     SourceImage = object
         path: string
         allowAlphaCrop: bool
@@ -69,8 +69,16 @@ proc newSpriteSheet(minSize: Size): SpriteSheet =
     result.packer.maxX = px.int32
     result.packer.maxY = py.int32
 
+proc loadPNG32AUX(fileName: string, settings = PNGDecoder(nil)): PNGResult {.gcsafe.} =
+    {.gcsafe.}:
+        result = loadPNG32(fileName, settings)
+
+proc savePNG32AUX(fileName, input: string, w, h: int): bool {.gcsafe.} =
+    {.gcsafe.}:
+        result = savePNG32(fileName, input, w, h)
+
 proc readImageInfo(path: string, allowAlphaCrop: bool): SourceImageInfo {.gcsafe.} =
-    let png = loadPNG32(path)
+    let png = loadPNG32AUX(path)
     if png.isNil:
         raise newException(Exception, "Could not load " & path)
 
@@ -164,7 +172,7 @@ proc assignImagesToSpritesheets(imgs: var seq[SourceImage]): seq[SpriteSheet] =
 proc composeAndWrite(ss: SpriteSheet, images: seq[SourceImage]) {.gcsafe.} = # seq is better than openarray for spawn
     var data = newString(ss.size.width * ss.size.height * 4)
     for im in images:
-        var png = loadPNG32(im.path)
+        var png = loadPNG32AUX(im.path)
 
         if png.data.len == png.width * png.height * 4:
             zeroColorIfZeroAlpha(png.data)
@@ -195,7 +203,7 @@ proc composeAndWrite(ss: SpriteSheet, images: seq[SourceImage]) {.gcsafe.} = # s
             im.extrusion
         )
 
-    discard savePNG32(ss.path, data, ss.size.width, ss.size.height)
+    discard savePNG32AUX(ss.path, data, ss.size.width, ss.size.height)
     data = ""
 
 proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence], category: string) =
