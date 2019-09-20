@@ -46,7 +46,7 @@ proc imageBoundsNoColorBleed*(data: string, width, height: int): Rect =
 
     result = (minX, minY, maxX - minX + 1, maxY - minY + 1)
 
-proc imageBounds*(data: string, width, height: int): Rect =
+proc imageBounds*(data: string, width, height: int, threshold: uint8 = 0): Rect =
     var minX = width
     var minY = height
     var maxX = 0
@@ -55,7 +55,7 @@ proc imageBounds*(data: string, width, height: int): Rect =
     for x in 0 ..< width:
         for y in 0 ..< height:
             let off = (y * width + x) * 4
-            if data[off + 3].uint8 != 0:
+            if data[off + 3].uint8 >= threshold:
                 if x > maxX: maxX = x
                 if x < minX: minX = x
                 if y > maxY: maxY = y
