@@ -88,7 +88,7 @@ proc readImageInfo(path: string, allowAlphaCrop: bool): SourceImageInfo {.gcsafe
     result.size = (png.width, png.height)
 
     if allowAlphaCrop:
-        result.rect = imageBounds(png.data, png.width, png.height, 4'u8)
+        result.rect = imageBounds(png.data, png.width, png.height)
     else:
         result.rect.width = png.width
         result.rect.height = png.height
