@@ -46,7 +46,7 @@ proc imageBoundsNoColorBleed*(data: string, width, height: int): Rect =
 
     result = (minX, minY, maxX - minX + 1, maxY - minY + 1)
 
-proc imageBounds*(data: string, width, height: int, threshold: uint8 = 0): Rect =
+proc imageBounds*(data: string, width, height: int, threshold: uint8 = 1): Rect =
     var minX = width
     var minY = height
     var maxX = 0
