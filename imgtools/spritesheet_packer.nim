@@ -1,7 +1,7 @@
-import tables, sets, times, math, algorithm, logging
+import tables, sets, times, math, algorithm, logging, os, streams
 import nimPNG
 import rect_packer
-
+import nimwebp / encoder
 import imgtools
 
 const multithreaded = compileOption("threads")
@@ -24,6 +24,9 @@ type
         outputPrefix: string
         spriteSheets*: seq[SpriteSheet]
         maxTextureSize*: int
+        useWebp*: bool
+        webpQuality*: float
+        webpLossless*: bool
 
     ImageOccurence*[TInfo] = object
         path*: string
@@ -56,8 +59,11 @@ type
         packer: RectPacker
         size*: Size
         category*: string
-        path*: string # Index of sprite sheet in tool.images array
+        mPath: string
         packedIndexes: seq[int] # indexes of packed images
+        useWebp: bool
+        webpQuality: float
+        webpLossless: bool
 
 proc newSpriteSheetPacker*(outputPrefix: string): SpriteSheetPacker =
     result.new()
@@ -71,6 +77,9 @@ proc newSpriteSheet(maxSize: Size): SpriteSheet =
     result.packer = newPacker(px.int32, py.int32)
     result.packer.maxX = px.int32
     result.packer.maxY = py.int32
+
+proc `path=`*(ss: SpriteSheet, v:string) = ss.mPath = v
+proc path*(ss: SpriteSheet): string = ss.mPath & (if ss.useWebp: ".webp" else: ".png")
 
 proc loadPNG32AUX(fileName: string, settings = PNGDecoder(nil)): PNGResult {.gcsafe.} =
     {.gcsafe.}:
@@ -246,7 +255,25 @@ proc composeAndWrite(ss: SpriteSheet, images: seq[SourceImage]) {.gcsafe.} = # s
             im.extrusion
         )
 
-    discard savePNG32AUX(ss.path, data, ss.size.width, ss.size.height)
+    if ss.useWebp:
+        var pngBuff = cast[ptr uint8](addr data[0])
+        var encBuff: ptr uint8
+        let c = 4.cint
+        var size: cint
+        if ss.webpLossless:
+            size = webpEncodeLosslessRGBA(pngBuff, ss.size.width.cint, ss.size.height.cint,
+                ss.size.width.cint * c, addr encBuff)
+        else:
+            size = webpEncodeRGBA(pngBuff, ss.size.width.cint, ss.size.height.cint,
+                ss.size.width.cint * c, ss.webpQuality, addr encBuff)
+
+        var strm = newFileStream(ss.path, fmWrite)
+        strm.writeData(encBuff, size)
+        strm.close()
+
+        webpFree(encBuff)
+    else:
+        discard savePNG32AUX(ss.path, data, ss.size.width, ss.size.height)
     data = ""
 
 proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence], category: string) =
@@ -297,8 +324,10 @@ proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOcc
     for i, ss in spriteSheets:
         ss.size.width = ss.packer.width
         ss.size.height = ss.packer.height
+        ss.useWebp = packer.useWebp
+        ss.webpQuality = packer.webpQuality
         ss.packer = nil
-        ss.path = packer.outputPrefix & $(spriteSheetIdxOffset + i) & ".png"
+        ss.path = packer.outputPrefix & $(spriteSheetIdxOffset + i)
 
     var ssImages = newSeq[SourceImage]()
     s = epochTime()
