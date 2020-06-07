@@ -81,7 +81,7 @@ proc newSpriteSheet(maxSize: Size): SpriteSheet =
 proc `path=`*(ss: SpriteSheet, v:string) = ss.mPath = v
 proc path*(ss: SpriteSheet): string = ss.mPath & (if ss.useWebp: ".webp" else: ".png")
 
-proc loadPNG32AUX(fileName: string, settings = PNGDecoder(nil)): PNGResult {.gcsafe.} =
+proc loadPNG32AUX(fileName: string, settings = PNGDecoder(nil)): auto {.gcsafe.} =
     {.gcsafe.}:
         result = loadPNG32(fileName, settings)
 
