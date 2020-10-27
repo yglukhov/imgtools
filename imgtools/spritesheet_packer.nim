@@ -360,7 +360,7 @@ proc packCategory*(packer: SpriteSheetPacker, occurences: var openarray[ImageOcc
             occurences[idx].srcInfo = im.srcInfo
 
 proc pack*(packer: SpriteSheetPacker, occurences: var openarray[ImageOccurence]) =
-    var categories = initSet[string]()
+    var categories = initHashSet[string]()
     for o in occurences:
         categories.incl(o.category)
 
